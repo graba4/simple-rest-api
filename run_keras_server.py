@@ -7,9 +7,10 @@
 #	python simple_request.py
 
 # import the necessary packages
-from keras.applications import ResNet50
-from keras.preprocessing.image import img_to_array
-from keras.applications import imagenet_utils
+#import tensorflow as tf
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.applications import imagenet_utils
 from PIL import Image
 import numpy as np
 import flask
@@ -40,6 +41,7 @@ def prepare_image(image, target):
 	# return the processed image
 	return image
 
+# method for preparing how json data will look like
 @app.route("/predict", methods=["POST"])
 def predict():
 	# initialize the data dictionary that will be returned from the
@@ -73,6 +75,80 @@ def predict():
 
 	# return the data dictionary as a JSON response
 	return flask.jsonify(data)
+
+# beside main task query example
+@app.route('/query-example')
+def query_example():
+    # if key doesn't exist, returns None
+    language = flask.request.args.get('language')
+
+    # if key doesn't exist, returns a 400, bad request error
+    #framework = flask.request.args['framework']
+    # if key doesn't exist, returns None
+    framework = flask.request.args.get('framework')
+
+    # if key doesn't exist, returns None
+    website = flask.request.args.get('website')
+
+    return '''
+              <h1>The language value is: {}</h1>
+              <h1>The framework value is: {}</h1>
+              <h1>The website value is: {}'''.format(language, framework, website)
+
+# allow both GET and POST requests
+@app.route('/form-example', methods=['GET', 'POST'])
+def form_example():
+	# handle the POST request
+    if flask.request.method == 'POST':
+        language = flask.request.form.get('language')
+        framework = flask.request.form.get('framework')
+        return '''
+                  <h1>The language value is: {}</h1>
+                  <h1>The framework value is: {}</h1>'''.format(language, framework)
+
+    return '''
+              <form method="POST">
+                  <div><label>Language: <input type="text" name="language"></label></div>
+                  <div><label>Framework: <input type="text" name="framework"></label></div>
+                  <input type="submit" value="Submit">
+              </form>'''
+
+# GET requests will be blocked
+# poruke mozes slati preko CURL-a
+@app.route('/json-example', methods=['POST'])
+def json_example():
+    request_data = flask.request.get_json()
+
+    language = None
+    framework = None
+    python_version = None
+    example = None
+    boolean_test = None
+
+    if request_data:
+        if 'language' in request_data:
+            language = request_data['language']
+
+        if 'framework' in request_data:
+            framework = request_data['framework']
+
+        if 'version_info' in request_data:
+            if 'python' in request_data['version_info']:
+                python_version = request_data['version_info']['python']
+
+        if 'examples' in request_data:
+            if (type(request_data['examples']) == list) and (len(request_data['examples']) > 0):
+                example = request_data['examples'][0]
+
+        if 'boolean_test' in request_data:
+            boolean_test = request_data['boolean_test']
+
+    return '''
+           The language value is: {}
+           The framework value is: {}
+           The Python version is: {}
+           The item at index 0 in the example list is: {}
+           The boolean value is: {}'''.format(language, framework, python_version, example, boolean_test)
 
 # if this is the main thread of execution first load the model and
 # then start the server
